@@ -1,0 +1,27 @@
+# Local development settings for the Supabase CLI (`supabase start`).
+# Unlisted settings use the CLI defaults.
+project_id = "grocery-voice"
+
+[api]
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "http://localhost:3100/auth/callback"]
+
+[auth.email]
+enable_signup = true
+# Local only: sign-ups are usable immediately. Keep confirmations ON in production.
+enable_confirmations = false

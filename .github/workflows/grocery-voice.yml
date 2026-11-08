@@ -1,0 +1,46 @@
+name: grocery-voice
+
+on:
+  push:
+    paths: ["grocery-voice/**", ".github/workflows/grocery-voice.yml"]
+  pull_request:
+    paths: ["grocery-voice/**", ".github/workflows/grocery-voice.yml"]
+
+defaults:
+  run:
+    working-directory: grocery-voice
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/grocery_voice_test
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+      CRON_SECRET: ci-cron-secret-0123456789
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: grocery-voice/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx eslint . --max-warnings 0
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
